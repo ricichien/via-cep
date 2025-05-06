@@ -1,24 +1,33 @@
-// Em src/controllers/cepController.js (exemplo)
-const { db } = require('../config/firebase');
-// ... outros imports ...
+const axios = require("axios");
 
-// Exemplo de como buscar um CEP armazenado
-async function buscarCep(req, res) {
-  const cep = req.params.cep; // Supondo que o CEP venha na URL
+const FIRESTORE_URL = `https://firestore.googleapis.com/v1/projects/via-cep-234ca/databases/(default)/documents`;
+
+async function saveCepToFirestore(cepData) {
+  const cep = cepData.cep;
+
+  const document = {
+    fields: {
+      cep: { stringValue: cep },
+      logradouro: { stringValue: cepData.logradouro || '' },
+      bairro: { stringValue: cepData.bairro || '' },
+      localidade: { stringValue: cepData.localidade || '' },
+      uf: { stringValue: cepData.uf || '' },
+      ddd: { stringValue: cepData.ddd || '' },
+      gia: { stringValue: cepData.gia || '' },
+      ibge: { stringValue: cepData.ibge || '' },
+      siafi: { stringValue: cepData.siafi || '' },
+      favoritado: { booleanValue: cepData.favoritado || false }
+    }
+  };
 
   try {
-    const cepRef = db.collection('ceps').doc(cep); // 'ceps' seria sua coleção
-    const doc = await cepRef.get();
-
-    if (!doc.exists) {
-      res.status(404).send({ message: 'CEP não encontrado' });
-    } else {
-      res.status(200).send(doc.data());
-    }
+    await axios.put(`${FIRESTORE_URL}/ceps/${cep}`, document);
   } catch (error) {
-    console.error("Erro ao buscar CEP:", error);
-    res.status(500).send({ message: 'Erro interno do servidor' });
+    console.error("Error saving CEP:", error.response?.data || error.message);
+    throw new Error("Failed to save data");
   }
 }
 
-// ... Outras funções para listar, adicionar, atualizar, favoritar ...
+module.exports = {
+  saveCepToFirestore
+};
