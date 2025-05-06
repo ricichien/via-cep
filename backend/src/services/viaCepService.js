@@ -21,7 +21,7 @@ async function saveCepToFirestore(cepData) {
   };
 
   try {
-    await axios.put(`${FIRESTORE_URL}/ceps/${cep}`, document);
+    await axios.post(`${FIRESTORE_URL}/ceps`, document);
   } catch (error) {
     console.error("Error saving CEP:", error.response?.data || error.message);
     throw new Error("Failed to save data");

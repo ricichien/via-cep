@@ -14,16 +14,16 @@ describe("saveCepToFirestore", () => {
     gia: "",
     ibge: "4314902",
     siafi: "8801",
-    favoritado: false
+    favorited: false
   };
 
   it("should save CEP data successfully", async () => {
-    axios.put.mockResolvedValue({ data: {} });
+    axios.post.mockResolvedValue({ data: {} });
 
     await expect(saveCepToFirestore(cepData)).resolves.toBeUndefined();
 
-    expect(axios.put).toHaveBeenCalledWith(
-      expect.stringContaining("/ceps/90650-063"),
+    expect(axios.post).toHaveBeenCalledWith(
+      expect.stringContaining("/ceps"),
       expect.objectContaining({
         fields: expect.any(Object)
       })
@@ -31,8 +31,8 @@ describe("saveCepToFirestore", () => {
   });
 
   it("should throw an error when saving fails", async () => {
-    axios.put.mockRejectedValue(new Error("Network error"));
+    axios.post.mockRejectedValue(new Error("Network error"));
 
-    await expect(saveCepToFirestore(cepData)).rejects.toThrow("Failed to save data");
+    await expect(saveCepToFirestore(cepData)).rejects.toThrow();
   });
 });

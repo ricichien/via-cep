@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const express = require("express");
 const bodyParser = require("body-parser");
 const { createCep, listCeps, favoriteCep, unfavoriteCep, syncCeps } = require("./controllers/cepController");
@@ -7,7 +9,7 @@ const port = 3000;
 
 app.use(bodyParser.json());
 
-app.put("/ceps", createCep);
+app.post("/create", createCep);
 app.get("/sync", async (req, res) => {
   try {
     await syncCeps();
@@ -17,7 +19,7 @@ app.get("/sync", async (req, res) => {
     res.status(500).send({ error: "Error syncing the CEPs" });
   }
 });
-app.get("/ceps", listCeps);
+app.get("/list", listCeps);
 app.patch("/ceps/:cep/favorite", favoriteCep);
 app.patch("/ceps/:cep/unfavorite", unfavoriteCep);
 

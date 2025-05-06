@@ -14,7 +14,7 @@ const app = express();
 app.use(express.json());
 
 app.get("/ceps", listCeps);
-app.put("/ceps", createCep);
+app.post("/ceps", createCep);
 app.patch("/ceps/:cep/favorite", favoriteCep);
 app.patch("/ceps/:cep/unfavorite", unfavoriteCep);
 
@@ -31,7 +31,7 @@ describe("CEP Controller", () => {
               bairro: { stringValue: "Azenha" },
               localidade: { stringValue: "Porto Alegre" },
               uf: { stringValue: "RS" },
-              favoritado: { booleanValue: false }
+              favorited: { booleanValue: false }
             }
           }
         ]
@@ -43,8 +43,8 @@ describe("CEP Controller", () => {
     expect(res.body[0].cep).toBe("90650-063");
   });
 
-  it("PUT /ceps should create new CEP", async () => {
-    axios.put.mockResolvedValue({ data: {} });
+  it("POST /ceps should create new CEP", async () => {
+    axios.post.mockResolvedValue({ data: {} });
 
     const payload = {
       cep: "99999-999",
@@ -54,11 +54,19 @@ describe("CEP Controller", () => {
       uf: "RS"
     };
 
-    const res = await request(app).put("/ceps").send(payload);
+    const res = await request(app).post("/ceps").send(payload);
     expect(res.statusCode).toBe(201);
   });
 
   it("PATCH /ceps/:cep/favorite should mark as favorite", async () => {
+    axios.get.mockResolvedValue({
+      data: {
+        fields: {
+          cep: { stringValue: "99999-999" },
+          favorited: { booleanValue: false }
+        }
+      }
+    });
     axios.patch.mockResolvedValue({ data: {} });
 
     const res = await request(app).patch("/ceps/99999-999/favorite");
@@ -66,9 +74,58 @@ describe("CEP Controller", () => {
   });
 
   it("PATCH /ceps/:cep/unfavorite should unmark favorite", async () => {
+    axios.get.mockResolvedValue({
+      data: {
+        fields: {
+          cep: { stringValue: "99999-999" },
+          favorited: { booleanValue: true }
+        }
+      }
+    });
     axios.patch.mockResolvedValue({ data: {} });
 
     const res = await request(app).patch("/ceps/99999-999/unfavorite");
     expect(res.statusCode).toBe(200);
+  });
+
+  it("POST /ceps should handle Firestore error", async () => {
+    axios.post.mockRejectedValue(new Error("Firestore error"));
+
+    const payload = {
+      cep: "12345-678",
+      logradouro: "Rua Erro",
+      bairro: "Erro Bairro",
+      localidade: "Erro City",
+      uf: "ER"
+    };
+
+    const res = await request(app).post("/ceps").send(payload);
+    expect(res.statusCode).toBe(500);
+    expect(res.body.error).toBe("Error saving CEP");
+  });
+
+  it("GET /ceps should handle error when fetching data", async () => {
+    axios.get.mockRejectedValue(new Error("Firestore unavailable"));
+
+    const res = await request(app).get("/ceps");
+    expect(res.statusCode).toBe(500);
+    expect(res.body.error).toBe("Error listing CEPs");
+  });
+
+  it("PATCH /ceps/:cep/favorite should handle Firestore patch error", async () => {
+    axios.get.mockResolvedValue({
+      data: {
+        fields: {
+          cep: { stringValue: "12345-678" },
+          favorited: { booleanValue: false }
+        }
+      }
+    });
+
+    axios.patch.mockRejectedValue(new Error("Firestore patch failed"));
+
+    const res = await request(app).patch("/ceps/12345-678/favorite");
+    expect(res.statusCode).toBe(500);
+    expect(res.body.error).toBe("Error favoriting CEP");
   });
 });

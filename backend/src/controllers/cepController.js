@@ -3,11 +3,28 @@ const { saveCepToFirestore } = require("../services/viaCepService");
 
 async function syncCeps() {
   const url = "https://viacep.com.br/ws/RS/Porto%20Alegre/Domingos/json/";
-  const response = await axios.get(url);
-  const ceps = response.data;
+  try {
+    console.log("Fetching data from ViaCEP...");
+    const response = await axios.get(url);
+    console.log("Received data from ViaCEP:", response.data);
 
-  for (const cepObj of ceps) {
-    await saveCepToFirestore(cepObj);
+    const ceps = response.data;
+
+    if (!Array.isArray(ceps)) {
+      console.error("Unexpected data format from ViaCEP:", ceps);
+      throw new Error("Invalid response from ViaCEP");
+    }
+
+    for (const cepObj of ceps) {
+      console.log("Saving:", cepObj);
+      await saveCepToFirestore(cepObj); 
+    }
+
+    console.log("Sync completed successfully!");
+  } catch (error) {
+    console.error("Error syncing CEPs:", error.message);
+    console.error("Detailed error:", error.response?.data || error.stack);
+    throw new Error("Error syncing the CEPs");
   }
 }
 
@@ -40,7 +57,7 @@ async function createCep(req, res) {
   const { cep, logradouro, bairro, localidade, uf } = req.body;
 
   try {
-    const response = await axios.put(`${process.env.FIRESTORE_URL}/ceps/${cep}`, {
+    const response = await axios.post(`${process.env.FIRESTORE_URL}/ceps`, {
       fields: {
         cep: { stringValue: cep },
         logradouro: { stringValue: logradouro },
@@ -57,6 +74,47 @@ async function createCep(req, res) {
     res.status(500).json({ error: "Error saving CEP" });
   }
 }
+
+
+// async function createCep(req, res) {
+//   const { cep, logradouro, bairro, localidade, uf } = req.body;
+
+//   try {
+
+//     console.log("Firestore URL:", process.env.FIRESTORE_URL);
+
+//     // const response = await axios.put(`${process.env.FIRESTORE_URL}/ceps/${cep}`, {
+//     //   fields: {
+//     //     cep: { stringValue: cep },
+//     //     logradouro: { stringValue: logradouro },
+//     //     bairro: { stringValue: bairro },
+//     //     localidade: { stringValue: localidade },
+//     //     uf: { stringValue: uf },
+//     //     favoritado: { booleanValue: false }
+//     //   }
+//     // });
+
+//     const response = await axios.post(
+//       `${process.env.FIRESTORE_URL}/ceps/${cep}`, 
+//       {
+//         fields: {
+//           cep: { stringValue: cep },
+//           logradouro: { stringValue: logradouro },
+//           bairro: { stringValue: bairro },
+//           localidade: { stringValue: localidade },
+//           uf: { stringValue: uf },
+//           favoritado: { booleanValue: false }
+//         }
+//       }
+//     );
+    
+
+//     res.status(201).json({ message: "CEP created", data: response.data });
+//   } catch (error) {
+//     console.error("Error saving:", error.response?.data || error.message);
+//     res.status(500).json({ error: "Error saving CEP" });
+//   }
+// }
 
 async function favoriteCep(req, res) {
   const cepId = req.params.cep;
