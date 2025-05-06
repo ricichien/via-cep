@@ -1,0 +1,3 @@
+const FIRESTORE_URL = "https://firestore.googleapis.com/v1/projects/via-cep-234ca/databases/(default)/documents";
+
+module.exports = { FIRESTORE_URL };
