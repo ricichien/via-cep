@@ -75,6 +75,35 @@ async function createCep(req, res) {
   }
 }
 
+async function updateCep(req, res) {
+  const { cep } = req.params;  // O ID do CEP a ser atualizado
+  const { logradouro, bairro } = req.body;  // Os novos valores para logradouro e bairro
+
+  try {
+    // Buscar o documento atual para pegar os campos existentes
+    const docRef = `${process.env.FIRESTORE_URL}/ceps/${cep}`;
+    const currentDoc = await axios.get(docRef);  // Recuperando o documento atual
+    
+    const data = currentDoc.data.fields;
+    
+    // Atualizando apenas os campos logradouro e bairro
+    const updatedData = {
+      ...data,
+      logradouro: { stringValue: logradouro || data.logradouro.stringValue },  // Atualiza se fornecido, senão mantém o atual
+      bairro: { stringValue: bairro || data.bairro.stringValue },  // Atualiza se fornecido, senão mantém o atual
+    };
+
+    // Realizar a atualização
+    const response = await axios.patch(docRef, {
+      fields: updatedData
+    });
+
+    res.status(200).json({ message: `CEP ${cep} updated successfully!`, data: response.data });
+  } catch (error) {
+    console.error("Error updating CEP:", error.response?.data || error.message);
+    res.status(500).json({ error: "Error updating the CEP" });
+  }
+}
 
 // async function createCep(req, res) {
 //   const { cep, logradouro, bairro, localidade, uf } = req.body;
@@ -158,5 +187,6 @@ module.exports = {
   listCeps,
   favoriteCep,
   unfavoriteCep,
-  syncCeps
+  syncCeps,
+  updateCep,  // Exportando a função de atualização
 };
