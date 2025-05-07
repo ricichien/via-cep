@@ -53,47 +53,23 @@ async function listCeps(req, res) {
   }
 }
 
-async function createCep(req, res) {
-  const { cep, logradouro, bairro, localidade, uf } = req.body;
-
-  try {
-    const response = await axios.post(`${process.env.FIRESTORE_URL}/ceps`, {
-      fields: {
-        cep: { stringValue: cep },
-        logradouro: { stringValue: logradouro },
-        bairro: { stringValue: bairro },
-        localidade: { stringValue: localidade },
-        uf: { stringValue: uf },
-        favoritado: { booleanValue: false }
-      }
-    });
-
-    res.status(201).json({ message: "CEP created", data: response.data });
-  } catch (error) {
-    console.error("Error saving:", error.response?.data || error.message);
-    res.status(500).json({ error: "Error saving CEP" });
-  }
-}
-
 async function updateCep(req, res) {
-  const { cep } = req.params;  // O ID do CEP a ser atualizado
-  const { logradouro, bairro } = req.body;  // Os novos valores para logradouro e bairro
+  const { cep } = req.params;  
+  const { logradouro, bairro } = req.body;  
 
   try {
-    // Buscar o documento atual para pegar os campos existentes
+
     const docRef = `${process.env.FIRESTORE_URL}/ceps/${cep}`;
-    const currentDoc = await axios.get(docRef);  // Recuperando o documento atual
+    const currentDoc = await axios.get(docRef); 
     
     const data = currentDoc.data.fields;
     
-    // Atualizando apenas os campos logradouro e bairro
     const updatedData = {
       ...data,
-      logradouro: { stringValue: logradouro || data.logradouro.stringValue },  // Atualiza se fornecido, senão mantém o atual
-      bairro: { stringValue: bairro || data.bairro.stringValue },  // Atualiza se fornecido, senão mantém o atual
+      logradouro: { stringValue: logradouro || data.logradouro.stringValue }, 
+      bairro: { stringValue: bairro || data.bairro.stringValue }, 
     };
 
-    // Realizar a atualização
     const response = await axios.patch(docRef, {
       fields: updatedData
     });
@@ -105,88 +81,33 @@ async function updateCep(req, res) {
   }
 }
 
-// async function createCep(req, res) {
-//   const { cep, logradouro, bairro, localidade, uf } = req.body;
-
-//   try {
-
-//     console.log("Firestore URL:", process.env.FIRESTORE_URL);
-
-//     // const response = await axios.put(`${process.env.FIRESTORE_URL}/ceps/${cep}`, {
-//     //   fields: {
-//     //     cep: { stringValue: cep },
-//     //     logradouro: { stringValue: logradouro },
-//     //     bairro: { stringValue: bairro },
-//     //     localidade: { stringValue: localidade },
-//     //     uf: { stringValue: uf },
-//     //     favoritado: { booleanValue: false }
-//     //   }
-//     // });
-
-//     const response = await axios.post(
-//       `${process.env.FIRESTORE_URL}/ceps/${cep}`, 
-//       {
-//         fields: {
-//           cep: { stringValue: cep },
-//           logradouro: { stringValue: logradouro },
-//           bairro: { stringValue: bairro },
-//           localidade: { stringValue: localidade },
-//           uf: { stringValue: uf },
-//           favoritado: { booleanValue: false }
-//         }
-//       }
-//     );
-    
-
-//     res.status(201).json({ message: "CEP created", data: response.data });
-//   } catch (error) {
-//     console.error("Error saving:", error.response?.data || error.message);
-//     res.status(500).json({ error: "Error saving CEP" });
-//   }
-// }
-
-async function favoriteCep(req, res) {
+async function toggleFavoriteCep(req, res) {
   const cepId = req.params.cep;
 
   try {
+    const currentDoc = await axios.get(`${process.env.FIRESTORE_URL}/ceps/${cepId}`);
+    const currentFavoritado = currentDoc.data.fields.favoritado.booleanValue;
+
+    const newFavoritado = !currentFavoritado;
+
     const response = await axios.patch(`${process.env.FIRESTORE_URL}/ceps/${cepId}?updateMask.fieldPaths=favoritado`, {
       fields: {
-        favoritado: { booleanValue: true }
-      },
-      headers: {
-        "If-Match": "*"  // Ensures document exists before updating
+        favoritado: { booleanValue: newFavoritado }
       }
     });
 
-    res.status(200).json({ message: `CEP ${cepId} marked as favorite` });
-  } catch (error) {
-    console.error("Error favoriting CEP:", error.response?.data || error.message);
-    res.status(500).json({ error: "Error favoriting CEP" });
-  }
-}
-
-async function unfavoriteCep(req, res) {
-  const cepId = req.params.cep;
-
-  try {
-    const response = await axios.patch(`${process.env.FIRESTORE_URL}/ceps/${cepId}?updateMask.fieldPaths=favoritado`, {
-      fields: {
-        favoritado: { booleanValue: false }
-      }
+    res.status(200).json({
+      message: `CEP ${cepId} ${newFavoritado ? 'marked as favorite' : 'removed from favorites'}`,
     });
-
-    res.status(200).json({ message: `CEP ${cepId} removed from favorites` });
   } catch (error) {
-    console.error("Error unfavoriting CEP:", error.response?.data || error.message);
-    res.status(500).json({ error: "Error unfavoriting CEP" });
+    console.error("Error toggling favorite status for CEP:", error.response?.data || error.message);
+    res.status(500).json({ error: "Error toggling favorite status for CEP" });
   }
 }
 
 module.exports = {
-  createCep,
   listCeps,
-  favoriteCep,
-  unfavoriteCep,
+  toggleFavoriteCep,
   syncCeps,
-  updateCep,  // Exportando a função de atualização
+  updateCep,
 };

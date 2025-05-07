@@ -36,7 +36,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require('cors');
 
-const { createCep, listCeps, favoriteCep, unfavoriteCep, syncCeps, updateCep } = require("./controllers/cepController");
+const { listCeps, syncCeps, updateCep, toggleFavoriteCep } = require("./controllers/cepController");
 
 const app = express();
 const port = 3000;
@@ -44,7 +44,6 @@ const port = 3000;
 app.use(cors());
 app.use(bodyParser.json());
 
-app.post("/create", createCep);
 app.get("/sync", async (req, res) => {
   try {
     await syncCeps();
@@ -56,11 +55,13 @@ app.get("/sync", async (req, res) => {
 });
 app.get("/list", listCeps);
 
-// Rota para favoritar/desfavoritar um CEP
-app.patch("/ceps/:cep/favorite", favoriteCep);
-app.patch("/ceps/:cep/unfavorite", unfavoriteCep);
+
+// // Rota para favoritar/desfavoritar um CEP
+// app.patch("/ceps/:cep/favorite", favoriteCep);
+// app.patch("/ceps/:cep/unfavorite", unfavoriteCep);
 
 // Rota para atualizar o logradouro e bairro de um CEP
+app.patch("/ceps/:cep/toggle-favorite", toggleFavoriteCep);
 app.patch("/ceps/:cep", updateCep);
 
 app.listen(port, () => {
