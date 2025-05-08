@@ -76,6 +76,8 @@ Para executar o projeto corretamente, siga as instruções abaixo:
 
 ### Na pasta Backend
 
+(Assumindo que você está na pasta via-cep, use o comando no terminal cd backend e siga as instruções)
+
 1. Instale as dependências:
 
 ```bash
