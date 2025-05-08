@@ -1,7 +1,5 @@
 const axios = require("axios");
 
-const FIRESTORE_URL = `https://firestore.googleapis.com/v1/projects/via-cep-234ca/databases/(default)/documents`;
-
 async function saveCepToFirestore(cepData) {
   const cep = cepData.cep;
 
@@ -21,7 +19,7 @@ async function saveCepToFirestore(cepData) {
   };
 
   try {
-    await axios.post(`${FIRESTORE_URL}/ceps`, document);
+    await axios.post(`${process.env.FIRESTORE_URL}/ceps`, document);
   } catch (error) {
     console.error("Error saving CEP:", error.response?.data || error.message);
     throw new Error("Failed to save data");

@@ -1,0 +1,66 @@
+.map-fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 0;
+  }
+  
+  .cep-card-right-container {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 10;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    padding-right: 40px;
+    box-sizing: border-box;
+  }
+  
+  .cep-card-floating {
+    width: 400px;
+    max-height: 90vh;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    border: 1px solid #d1d5db;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  
+  .cep-card-content {
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    height: 100%;
+  }
+  
+  .search-bar-container {
+    margin-bottom: 16px;
+  }
+  
+.cep-list-container {
+    flex: 1;
+    overflow-y: auto; 
+    max-height: calc(90vh - 120px); 
+    padding-right: 8px;
+  }
+  
+  @media (max-width: 768px) {
+    .cep-card-right-container {
+      padding-right: 10px;
+    }
+  
+    .cep-card-floating {
+      width: 90vw;
+      height: auto;
+    }
+  
+    .cep-card-content {
+      padding: 12px;
+    }
+  }
+  
